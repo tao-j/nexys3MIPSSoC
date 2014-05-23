@@ -2,8 +2,9 @@
 /build
 /iseconfig
 /tools
-/ipcore_dir/tmp
-/ipcore_dir/_xmsgs
+#/ipcore_dir/tmp
+#/ipcore_dir/_xmsgs
+/ipcore_dir/*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
