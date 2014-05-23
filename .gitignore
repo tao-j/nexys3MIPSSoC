@@ -1,3 +1,10 @@
+# ISE tmp files
+/build
+/iseconfig
+/tools
+/ipcore_dir/tmp
+/ipcore_dir/_xmsgs
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
