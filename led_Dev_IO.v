@@ -1,30 +1,28 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    16:58:11 07/01/2012 
-// Design Name: 
-// Module Name:    Device_led 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
+
+// nexys3MIPSSoC is a MIPS implementation originated from COAD projects
+// Copyright (C) 2014  @Wenri, @dtopn, @Speed
 //
-// Dependencies: 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//////////////////////////////////////////////////////////////////////////////////
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 module led_Dev_IO(input clk,
 						input rst,
 						input GPIOf0000000_we,
 						input [31:0] Peripheral_in,
 						output [1:0] counter_set,
 						output [7:0] led_out,
-						output [21:0] GPIOf0						 
+						output [21:0] GPIOf0
 						);
-						
+
 endmodule

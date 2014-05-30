@@ -9,11 +9,11 @@
 ////   -                                                          ////
 ////                                                              ////
 ////  Author(s):                                                  ////
-////      - Julius Baxter, julius@opencores.org                   ////
+////      - @Wenri, Julius Baxter, julius@opencores.org           ////
 ////                                                              ////
 //////////////////////////////////////////////////////////////////////
 ////                                                              ////
-//// Copyright (C) 2012 Authors and OPENCORES.ORG                 ////
+//// Copyright (C) 2014 @Wenri, Authors and OPENCORES.ORG         ////
 ////                                                              ////
 //// This source file may be used and distributed without         ////
 //// restriction provided that this copyright statement is not    ////
