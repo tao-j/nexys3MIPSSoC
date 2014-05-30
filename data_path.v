@@ -51,23 +51,23 @@
 
  input clk,reset;
  input MIO_ready,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,EPCWrite,Co0Write;
- input [1:0] RegDst,ALUSrcB,PCSource,IntCause;
- input [2:0]ALU_operation,MemtoReg;
+ input [1:0] RegDst,ALUSrcB,IntCause;
+ input [2:0]ALU_operation,MemtoReg,PCSource;
  input [31:0] data2CPU;
  output [31:0] Inst_R,M_addr,data_out,PC_Current; //
  output zero,overflow;
 
  reg [31:0] Inst_R,ALU_Out,MDR,PC_Current,w_reg_data;
 
- wire [1:0] RegDst,ALUSrcB,PCSource,IntCause;
- wire [31:0] reg_outA,reg_outB,r6out; //regs
+ wire [1:0] RegDst,ALUSrcB,IntCause;
+ wire [31:0] reg_outA,reg_outB,r6out, epc_out; //regs
 
  wire reset,rst,zero,overflow,IRWrite,MIO_ready,RegWrite,Beq,modificative,CauseWrite,EPCWrite,Co0Write;
 //ALU
  wire IorD,ALUSrcA,PCWrite,PCWriteCond;
  wire [31:0] Alu_A,Alu_B,res;
  wire [31:0] rdata_A, rdata_B, data_out, data2CPU,M_addr, rdata_co0;
- wire [2:0] ALU_operation, MemtoReg;
+ wire [2:0] ALU_operation, MemtoReg, PCSource;
  wire [15:0] imm;
  wire [4:0] reg_Rs_addr_A,reg_Rt_addr_B,reg_rd_addr,reg_Wt_addr;
 
@@ -114,7 +114,8 @@ Coprocessor coprocessor0 (
     .EPCWrite(EPCWrite),
     .CauseWrite(CauseWrite),
     .IntCause(IntCause),
-    .rdata(rdata_co0)
+    .rdata(rdata_co0),
+    .epc_o(epc_out)
     );
 
  //path with MUX++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -171,10 +172,11 @@ Coprocessor coprocessor0 (
  PC_Current<=32'h30000000;
  else if (modificative==1)begin
  case(PCSource)
- 2'b00: if (MIO_ready) PC_Current <=res; // PC+4
- 2'b01: PC_Current <=ALU_Out; // branch
- 2'b10: PC_Current <={PC_Current[31:28],Inst_R[25:0],2'b00}; // jump
- 2'b11: PC_Current <=32'h80000180; // j$r
+ 3'b000: if (MIO_ready) PC_Current <=res; // PC+4
+ 3'b001: PC_Current <=ALU_Out; // branch
+ 3'b010: PC_Current <={PC_Current[31:28],Inst_R[25:0],2'b00}; // jump
+ 3'b011: PC_Current <=32'h00000180; // j$r
+ 3'b100: PC_Current <=epc_out;
  endcase
  end
  end

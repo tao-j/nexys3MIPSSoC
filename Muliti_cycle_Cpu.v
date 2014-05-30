@@ -46,9 +46,9 @@
  wire [31:0] Inst,Addr_out,PC_Current,pc_out,data_in,data_out;
  wire [15:0] imm;
  wire [4:0] state;
- wire [2:0] ALU_operation,MemtoReg;
+ wire [2:0] ALU_operation,MemtoReg,PCSource;
 
- wire [1:0] RegDst,ALUSrcB,PCSource,IntCause;
+ wire [1:0] RegDst,ALUSrcB,IntCause;
  wire breq_o,CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,EPCWrite,Co0Write;
  wire reset,MIO_ready, mem_w,zero,overflow,Ireq,Iack;
 

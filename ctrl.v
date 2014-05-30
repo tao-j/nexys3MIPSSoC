@@ -50,31 +50,33 @@ module ctrl(clk,
 input clk,reset;
 input zero,overflow,MIO_ready,Ireq;
 input [31:0] Inst_in;
-output [2:0] ALU_operation;
+output [2:0] ALU_operation,MemtoReg,PCSource;
 output CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,IntCause,EPCWrite,Iack,Co0Write;
 output [4:0] state_out;
-output [1:0] RegDst,MemtoReg,ALUSrcB,PCSource;
+output [1:0] RegDst,ALUSrcB;
 
 wire [4:0] state_out;
 wire reset,MIO_ready,Ireq;
 reg CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,EPCWrite,Iack,Co0Write;
-reg [1:0] RegDst,ALUSrcB,PCSource,IntCause;
-reg [2:0] ALU_operation, MemtoReg;
+reg [1:0] RegDst,ALUSrcB,IntCause;
+reg [2:0] ALU_operation, MemtoReg, PCSource;
 reg [4:0] state;
 
 parameter IF = 5'b00000, ID=5'b00001, EX_R= 5'b00010, EX_Mem=5'b00011, EX_I=5'b00100,
 	Lui_WB=5'b00101, EX_beq=5'b00110, EX_bne= 5'b00111, EX_jr= 5'b01000, EX_JAL=5'b01001,
 	Exe_J = 5'b01010, MEM_RD=5'b01011, MEM_WD= 5'b01100, WB_R= 5'b01101, WB_I=5'b01110,
-	WB_LW=5'b01111, EX_jalr=5'b10000, EX_INT=5'b10001, Error=5'b11111;
+	WB_LW=5'b01111, EX_jalr=5'b10000, EX_INT=5'b10001, EX_ERET=5'b10010, Error=5'b11111;
 parameter AND=3'b000, OR=3'b001, ADD=3'b010, SUB=3'b110, NOR=3'b100, SLT=3'b111, XOR=3'b011, SRL=3'b101;
 
-`define CPU_ctrl_signals {MemtoReg[2],Co0Write,CauseWrite,EPCWrite,PCWrite,PCWriteCond,IorD,MemRead,MemWrite,IRWrite,MemtoReg[1:0],PCSource,ALUSrcB,ALUSrcA,RegWrite,RegDst,CPU_MIO}
-// EX_INT                                                    0,       1,      1,          0,   0,      0,       0,      0,      00,      11,     01,      0,       0,    00,      0
+`define CPU_ctrl_signals {PCSource[2],MemtoReg[2],Co0Write,CauseWrite,EPCWrite,PCWrite,PCWriteCond,IorD,MemRead,MemWrite,IRWrite,MemtoReg[1:0],PCSource[1:0],ALUSrcB,ALUSrcA,RegWrite,RegDst,CPU_MIO}
+// EX_INT                                                           0,       1,      1,          0,   0,      0,       0,      0,           00,           11,     01,      0,       0,    00,      0
+// EX_ERET                          1,          0,       0,         0,       0,      1,          0,   0,      0,       0,      0,           00,           00,     11,      0,       0,    00,      0
+// EX_JM                                                                             1,          0,   0,      0,       0,      0,           00,           10,     11,      0,       0,    00,      0
 // IF                                                                         1,          0,   0,      1,       0,      1,      00,      00,     01,      0,       0,    00,      1
 // IF                                                                         0,          0,   0,      0,       0,      0,      00,      00,     11,      0,       0,    00,      0
 // 1 0 0 0 0 0 10 10 00 0 0 00 0
 //
-`define nSignals 19
+`define nSignals 22
 
 assign state_out=state;
 
@@ -91,7 +93,7 @@ else begin
 		IF: begin
 			if(MIO_ready) begin
 				if(Ireq)begin
-					Iack <= 0;
+					Iack <= 1;
 					`CPU_ctrl_signals<=`nSignals'h701A0;
 					ALU_operation<=SUB;
 					state <= EX_INT;
@@ -196,6 +198,19 @@ else begin
 					state <= Lui_WB;
 				end
 
+				6'b010000: if(Inst_in[25]) begin //COP0
+					case (Inst_in[5:0])
+						6'b011000: begin
+							`CPU_ctrl_signals<=`nSignals'h210060;
+							state <= EX_ERET;
+						end
+						default: begin
+							`CPU_ctrl_signals<=`nSignals'h12821;
+							state <= Error;
+						end
+					endcase
+				end
+
 				default: begin
 					`CPU_ctrl_signals<=`nSignals'h12821;
 					state <= Error;
@@ -274,6 +289,10 @@ else begin
 			ALU_operation<=ADD; state <= IF; end
 
 	    EX_INT:begin
+			`CPU_ctrl_signals<=`nSignals'h12821;
+			ALU_operation<=ADD; state <= IF; end
+
+	    EX_ERET:begin
 			`CPU_ctrl_signals<=`nSignals'h12821;
 			ALU_operation<=ADD; state <= IF; end
 

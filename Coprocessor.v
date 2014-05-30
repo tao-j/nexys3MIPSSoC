@@ -27,13 +27,15 @@ module Coprocessor(
     input EPCWrite,
     input CauseWrite,
     input [1:0] IntCause,
-    output [31:0] rdata
+    output [31:0] rdata,
+    output [31:0] epc_o
     );
 
 reg [31:0] register[12:14];
 integer i;
 
 assign rdata = register[reg_R_addr];
+assign epc_o = register[14];
 
 always @(posedge clk or posedge rst)
     if (rst == 1)begin
