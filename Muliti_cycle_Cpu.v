@@ -28,14 +28,16 @@
  data_in,
  breq_o,
  CPU_MIO,
- state
+ state,
+ Ireq,
+ Iack
  );
 
 
- input clk,reset,MIO_ready;
+ input clk,reset,MIO_ready,Ireq;
  output [31:0] pc_out;
  output [31:0] Inst;
- output mem_w, breq_o, CPU_MIO;
+ output mem_w, breq_o, CPU_MIO,Iack;
  output [31:0] Addr_out;
  output [31:0] data_out;
  output [4:0] state;
@@ -44,13 +46,11 @@
  wire [31:0] Inst,Addr_out,PC_Current,pc_out,data_in,data_out;
  wire [15:0] imm;
  wire [4:0] state;
- wire [2:0] ALU_operation;
+ wire [2:0] ALU_operation,MemtoReg;
 
- wire [1:0] RegDst,MemtoReg,ALUSrcB,PCSource;
- wire breq_o,CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq;
- wire reset,MIO_ready, mem_w,zero,overflow;
-
-
+ wire [1:0] RegDst,ALUSrcB,PCSource,IntCause;
+ wire breq_o,CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,EPCWrite,Co0Write;
+ wire reset,MIO_ready, mem_w,zero,overflow,Ireq,Iack;
 
  // assign rst=reset;
  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
@@ -77,7 +77,13 @@
  .PCSource(PCSource),
  .PCWrite(PCWrite),
  .PCWriteCond(PCWriteCond),
- .Beq(Beq)
+ .Beq(Beq),
+ .CauseWrite(CauseWrite),
+ .IntCause(IntCause),
+ .EPCWrite(EPCWrite),
+ .Co0Write(Co0Write),
+ .Ireq(Ireq),
+ .Iack(Iack)
  );
 
  data_path x_datapath(.clk(clk),
@@ -103,7 +109,12 @@
  .data_out(data_out),
  .M_addr(Addr_out),
  .zero(zero),
- .overflow(overflow)
+ .overflow(overflow),
+
+ .CauseWrite(CauseWrite),
+ .IntCause(IntCause),
+ .EPCWrite(EPCWrite),
+ .Co0Write(Co0Write)
  );
 
 

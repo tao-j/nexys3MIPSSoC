@@ -1,23 +1,21 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    22:40:41 03/20/2014 
-// Design Name: 
-// Module Name:    ALU 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
+
+// nexys3MIPSSoC is a MIPS implementation originated from COAD projects
+// Copyright (C) 2014  @Wenri, @dtopn, @Speed
 //
-// Dependencies: 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//////////////////////////////////////////////////////////////////////////////////
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 module alu(
 	input [31:0] A,
 	input [31:0] B,
@@ -27,7 +25,7 @@ module alu(
 	output reg overflow
     );
 wire [31:0] res_and,res_or,res_add,res_sub,res_nor,res_slt;
-reg [31:0] res_op; 
+reg [31:0] res_op;
 parameter one = 32'h00000001,zero_0=32'h00000000;
 
 assign res_and = A&B;

@@ -41,28 +41,33 @@
  M_addr,
 
  zero,
- overflow
+ overflow,
+
+ CauseWrite,
+ IntCause,
+ EPCWrite,
+ Co0Write,
  );
 
  input clk,reset;
- input MIO_ready,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq;
- input [1:0] RegDst,MemtoReg,ALUSrcB,PCSource;
- input [2:0]ALU_operation;
+ input MIO_ready,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,EPCWrite,Co0Write;
+ input [1:0] RegDst,ALUSrcB,PCSource,IntCause;
+ input [2:0]ALU_operation,MemtoReg;
  input [31:0] data2CPU;
  output [31:0] Inst_R,M_addr,data_out,PC_Current; //
  output zero,overflow;
 
- reg [31:0] Inst_R,ALU_Out,MDR,PC_Current;
+ reg [31:0] Inst_R,ALU_Out,MDR,PC_Current,w_reg_data;
 
- wire [1:0] RegDst,MemtoReg,ALUSrcB,PCSource;
+ wire [1:0] RegDst,ALUSrcB,PCSource,IntCause;
  wire [31:0] reg_outA,reg_outB,r6out; //regs
 
- wire reset,rst,zero,overflow,IRWrite,MIO_ready,RegWrite,Beq,modificative;
+ wire reset,rst,zero,overflow,IRWrite,MIO_ready,RegWrite,Beq,modificative,CauseWrite,EPCWrite,Co0Write;
 //ALU
  wire IorD,ALUSrcA,PCWrite,PCWriteCond;
  wire [31:0] Alu_A,Alu_B,res;
- wire [31:0] w_reg_data, rdata_A, rdata_B, data_out, data2CPU,M_addr;
- wire [2:0] ALU_operation;
+ wire [31:0] rdata_A, rdata_B, data_out, data2CPU,M_addr, rdata_co0;
+ wire [2:0] ALU_operation, MemtoReg;
  wire [15:0] imm;
  wire [4:0] reg_Rs_addr_A,reg_Rt_addr_B,reg_rd_addr,reg_Wt_addr;
 
@@ -98,6 +103,20 @@
  .rdata_A(rdata_A),
  .rdata_B(rdata_B));
 
+Coprocessor coprocessor0 (
+    .clk(clk),
+    .rst(rst),
+    .reg_R_addr(reg_Rt_addr_B),
+    .reg_W_addr(reg_W_addr),
+    .wdata(w_reg_data),
+    .pc_i(res),
+    .reg_we(Co0Write),
+    .EPCWrite(EPCWrite),
+    .CauseWrite(CauseWrite),
+    .IntCause(IntCause),
+    .rdata(rdata_co0)
+    );
+
  //path with MUX++++++++++++++++++++++++++++++++++++++++++++++++++++++
  // reg path
  assign reg_Rs_addr_A=Inst_R[25:21]; //REG Source 1 rs
@@ -106,14 +125,15 @@
  assign imm=Inst_R[15:0]; //Immediate
 
  // reg write data
- mux4to1_32 mux_w_reg_data(
- .a(ALU_Out), //ALU OP
- .b(MDR), //LW
- .c({imm,16'h0000}), //lui
- .d(PC_Current), // jr
- .sel(MemtoReg),
- .o(w_reg_data)
- );
+ always @(*)
+    case(MemtoReg)
+        3'b000: w_reg_data<=ALU_Out;
+        3'b001: w_reg_data<=MDR;
+        3'b010: w_reg_data<={imm,16'h0000};
+        3'b011: w_reg_data<=PC_Current;
+        3'b100: w_reg_data<=rdata_co0;
+    endcase
+
  // reg write port addr
  mux4to1_5 mux_w_reg_addr (
  .a(reg_Rt_addr_B), //reg addr=IR[21:16]
@@ -154,7 +174,7 @@
  2'b00: if (MIO_ready) PC_Current <=res; // PC+4
  2'b01: PC_Current <=ALU_Out; // branch
  2'b10: PC_Current <={PC_Current[31:28],Inst_R[25:0],2'b00}; // jump
- 2'b11: PC_Current <=ALU_Out; // j$r
+ 2'b11: PC_Current <=32'h80000180; // j$r
  endcase
  end
  end
