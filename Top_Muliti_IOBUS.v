@@ -195,6 +195,27 @@ assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
    wire           cellram_wb_we_i;
    wire           cellram_wb_ack_o;
 
+   wire [31:0] 	       		  wb_m0_vcache_adr_i;
+   wire [31:0] 	       		  wb_m0_vcache_dat_i;
+   wire [3:0] 	       		  wb_m0_vcache_sel_i;
+   wire 				  wb_m0_vcache_cyc_i;
+   wire 				  wb_m0_vcache_stb_i;
+   wire 				  wb_m0_vcache_we_i;
+   wire [31:0]  			  wb_m0_vcache_dat_o;
+   wire 				  wb_m0_vcache_ack_o;
+
+   wire [31:0] 	       		  wb_m1_cpu_adr_i;
+   wire [31:0] 	       		  wb_m1_cpu_dat_i;
+   wire [3:0] 	       		  wb_m1_cpu_sel_i;
+   wire 				  wb_m1_cpu_cyc_i;
+   wire 				  wb_m1_cpu_stb_i;
+   wire 				  wb_m1_cpu_we_i;
+   wire [31:0] 	       		  wb_m1_cpu_dat_o;
+   wire 				  wb_m1_cpu_ack_o;
+
+   wire 				  wb_m1_cpu_gnt;
+   wire 				  wb_m0_vcache_gnt;
+
  BIU biu0(
  .clk(clk_50mhz),
  .rst(rst),
@@ -212,15 +233,64 @@ assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
  .MIO_data4bus_i(MIO_data4bus), //write to CPU
  .MIO_ready_i(MIO_ready),
 
- .wb_adr_o(cellram_wb_adr_i),
- .wb_dat_o(cellram_wb_dat_i),
- .wb_stb_o(cellram_wb_stb_i),
- .wb_cyc_o(cellram_wb_cyc_i),
- .wb_we_o (cellram_wb_we_i ),
- .wb_sel_o(cellram_wb_sel_i),
- .wb_dat_i(cellram_wb_dat_o),
- .wb_ack_i(cellram_wb_ack_o)
+ .wb_m1_cpu_gnt(wb_m1_cpu_gnt),
+ .wb_adr_o(wb_m1_cpu_adr_i),
+ .wb_dat_o(wb_m1_cpu_dat_i),
+ .wb_sel_o(wb_m1_cpu_sel_i),
+ .wb_cyc_o(wb_m1_cpu_cyc_i),
+ .wb_stb_o(wb_m1_cpu_stb_i),
+ .wb_we_o (wb_m1_cpu_we_i ),
+ .wb_dat_i(wb_m1_cpu_dat_o),
+ .wb_ack_i(wb_m1_cpu_ack_o)
     );
+	
+vcache vchache0(
+ .wb_m0_vcache_gnt(wb_m0_vcache_gnt),
+ .wb_adr_o(wb_m0_vcache_adr_i),
+ .wb_dat_o(wb_m0_vcache_dat_i),
+ .wb_sel_o(wb_m0_vcache_sel_i),
+ .wb_cyc_o(wb_m0_vcache_cyc_i),
+ .wb_stb_o(wb_m0_vcache_stb_i),
+ .wb_we_o (wb_m0_vcache_we_i ),
+ .wb_dat_i(wb_m0_vcache_dat_o),
+ .wb_ack_i(wb_m0_vcache_ack_o)
+	);
+
+arbiter arbiter0(
+   .wb_clk(clk_50mhz),
+   .wb_rst(rst),
+   
+   .wb_s0_cellram_wb_adr_o(cellram_wb_adr_i),
+   .wb_s0_cellram_wb_dat_o(cellram_wb_dat_i),
+   .wb_s0_cellram_wb_sel_o(cellram_wb_sel_i),
+   .wb_s0_cellram_wb_stb_o(cellram_wb_stb_i),
+   .wb_s0_cellram_wb_cyc_o(cellram_wb_cyc_i),
+   .wb_s0_cellram_wb_we_o (cellram_wb_we_i ),
+   .wb_s0_cellram_wb_dat_i(cellram_wb_dat_o),
+   .wb_s0_cellram_wb_ack_i(cellram_wb_ack_o),
+
+		 .wb_m0_vcache_dat_o	(wb_m0_vcache_dat_o[31:0]),
+		 .wb_m0_vcache_ack_o	(wb_m0_vcache_ack_o),
+		 .wb_m0_vcache_adr_i	(wb_m0_vcache_adr_i[31:0]),
+		 .wb_m0_vcache_dat_i	(wb_m0_vcache_dat_i[31:0]),
+		 .wb_m0_vcache_sel_i	(wb_m0_vcache_sel_i[3:0]),
+		 .wb_m0_vcache_cyc_i	(wb_m0_vcache_cyc_i),
+		 .wb_m0_vcache_stb_i	(wb_m0_vcache_stb_i),
+		 .wb_m0_vcache_we_i	(wb_m0_vcache_we_i),
+		 
+		 .wb_m1_cpu_dat_o	(wb_m1_cpu_dat_o[31:0]),
+		 .wb_m1_cpu_ack_o	(wb_m1_cpu_ack_o),
+		 .wb_m1_cpu_adr_i	(wb_m1_cpu_adr_i[31:0]),
+		 .wb_m1_cpu_dat_i	(wb_m1_cpu_dat_i[31:0]),
+		 .wb_m1_cpu_sel_i	(wb_m1_cpu_sel_i[3:0]),
+		 .wb_m1_cpu_cyc_i	(wb_m1_cpu_cyc_i),
+		 .wb_m1_cpu_stb_i	(wb_m1_cpu_stb_i),
+		 .wb_m1_cpu_we_i	(wb_m1_cpu_we_i),
+		 
+		 .wb_m1_cpu_gnt		(wb_m1_cpu_gnt),
+		 .wb_m0_vcache_gnt	(wb_m0_vcache_gnt)
+);
+
 
    cellram_ctrl
      /* Use the simple flash interface */
