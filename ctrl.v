@@ -1,23 +1,21 @@
  `timescale 1ns / 1ps
- //////////////////////////////////////////////////////////////////////////////////
- // Company:
- // Engineer:
- //
- // Create Date: 21:16:06 08/03/2009
- // Design Name:
- // Module Name: ctrl
- // Project Name:
- // Target Devices:
- // Tool versions:
- // Description:
- //
- // Dependencies:
- //
- // Revision:
- // Revision 0.01 - File Created
- // Additional Comments:
- //
- //////////////////////////////////////////////////////////////////////////////////
+
+// nexys3MIPSSoC is a MIPS implementation originated from COAD projects
+// Copyright (C) 2014  @Wenri, @dtopn, @Speed
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 module ctrl(clk,
 	reset,
 	Inst_in,
@@ -150,25 +148,25 @@ case (state)
 				ALU_operation <= ADD;
 				state <= EX_I;
 			end
-			
+
 			6'b001100:begin //Andi
 				`CPU_ctrl_signals<=17'h00050;
 				ALU_operation <= AND;
 				state <= EX_I;
 			end
-			
+
 			6'b001101:begin //Ori
 				`CPU_ctrl_signals<=17'h00050;
 				ALU_operation <= OR;
 				state <= EX_I;
 			end
-	
+
 			6'b001110:begin //Xori
 				`CPU_ctrl_signals<=17'h00050;
 				ALU_operation <= XOR;
 				state <= EX_I;
 			end
-			
+
 			6'b001010:begin //Slti
 				`CPU_ctrl_signals<=17'h00050;
 				ALU_operation <= SLT;
@@ -187,7 +185,7 @@ case (state)
 
 		endcase
 	end //end ID
-	
+
 	EX_jalr:begin
 		`CPU_ctrl_signals<=17'h10018;
 		ALU_operation<=ADD; state <= EX_jr;
@@ -221,7 +219,7 @@ case (state)
 
 	EX_R:begin
 		`CPU_ctrl_signals<=17'h0001a; state <= WB_R; end
-		
+
 	EX_I:begin
 		`CPU_ctrl_signals<=17'h00058; state <= WB_I; end
 

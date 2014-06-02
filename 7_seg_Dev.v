@@ -1,23 +1,21 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// CompANy:
-// Engineer:
+
+// nexys3MIPSSoC is a MIPS implementation originated from COAD projects
+// Copyright (C) 2014  @Wenri, @dtopn, @Speed
 //
-// Create Date:    23:15:49 09/30/2011
-// Design Name:
-// Module Name:    x7seg
-// Project Name:
-// Target Devices:
-// Tool versions:
-// Description:
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Dependencies:
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-//
-//////////////////////////////////////////////////////////////////////////////////
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 module seven_seg(
 	input wire[31:0] disp_num,
 	input clk,
