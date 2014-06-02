@@ -11,4 +11,4 @@ Naming convention
 
 License
 -----
-This project was released under GPLv2 License
+This project was released under GPLv3 License
