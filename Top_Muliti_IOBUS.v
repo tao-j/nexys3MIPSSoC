@@ -179,7 +179,8 @@ cellram_ub_n_o
  .douta(ram_data_out)
  ); // Addre_Bus [9 : 0] ,Data_Bus [31 : 0]
 
-assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
+//assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
+assign dpdot = {cellram_mst_sel, mem_w, BIU_ready};//vga_gnt, cpu_gnt
 
  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  wire [31:0] MIO_data2bus, MIO_data4bus;
@@ -233,7 +234,7 @@ assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
  .MIO_data4bus_i(MIO_data4bus), //write to CPU
  .MIO_ready_i(MIO_ready),
 
- .wb_m1_cpu_gnt(wb_m1_cpu_gnt),
+ //.wb_m1_cpu_gnt(wb_m1_cpu_gnt),
  .wb_adr_o(wb_m1_cpu_adr_i),
  .wb_dat_o(wb_m1_cpu_dat_i),
  .wb_sel_o(wb_m1_cpu_sel_i),
@@ -245,7 +246,9 @@ assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
     );
 	
 vcache vchache0(
- .wb_m0_vcache_gnt(wb_m0_vcache_gnt),
+ .wb_clk_i(clk_50mhz),
+ .wb_rst_i(rst),
+ //.wb_m0_vcache_gnt(wb_m0_vcache_gnt),
  .wb_adr_o(wb_m0_vcache_adr_i),
  .wb_dat_o(wb_m0_vcache_dat_i),
  .wb_sel_o(wb_m0_vcache_sel_i),
@@ -253,13 +256,17 @@ vcache vchache0(
  .wb_stb_o(wb_m0_vcache_stb_i),
  .wb_we_o (wb_m0_vcache_we_i ),
  .wb_dat_i(wb_m0_vcache_dat_o),
- .wb_ack_i(wb_m0_vcache_ack_o)
+ .wb_ack_i(wb_m0_vcache_ack_o),
+ /*AUTOINST*/
 	);
-
+	
+wire [1:0] 				  cellram_mst_sel;
 arbiter arbiter0(
    .wb_clk(clk_50mhz),
    .wb_rst(rst),
    
+   .cellram_mst_sel(cellram_mst_sel),
+	
    .wb_s0_cellram_wb_adr_o(cellram_wb_adr_i),
    .wb_s0_cellram_wb_dat_o(cellram_wb_dat_i),
    .wb_s0_cellram_wb_sel_o(cellram_wb_sel_i),
@@ -285,10 +292,10 @@ arbiter arbiter0(
 		 .wb_m1_cpu_sel_i	(wb_m1_cpu_sel_i[3:0]),
 		 .wb_m1_cpu_cyc_i	(wb_m1_cpu_cyc_i),
 		 .wb_m1_cpu_stb_i	(wb_m1_cpu_stb_i),
-		 .wb_m1_cpu_we_i	(wb_m1_cpu_we_i),
+		 .wb_m1_cpu_we_i	(wb_m1_cpu_we_i)
 		 
-		 .wb_m1_cpu_gnt		(wb_m1_cpu_gnt),
-		 .wb_m0_vcache_gnt	(wb_m0_vcache_gnt)
+		 //.wb_m1_cpu_gnt		(wb_m1_cpu_gnt),
+		 //.wb_m0_vcache_gnt	(wb_m0_vcache_gnt)
 );
 
 

@@ -1,7 +1,7 @@
 module vcache(
 	      input wire 	wb_clk_i,
 	      input wire 	wb_rst_i, 
-			input wire 	wb_m0_vcache_gnt,
+			//input wire 	wb_m0_vcache_gnt,
 	      input wire 	wb_ack_i, // normal termination
 	      input wire 	wb_err_i, // termination w/ error
 	      input wire 	wb_rty_i, // termination w/ retry
@@ -14,9 +14,16 @@ module vcache(
 	      output reg [31:0] wb_dat_o // output data bus
 	      );
    
+	reg [25:0] counter;
+	
+	always @(posedge wb_clk_i) begin
+	   counter <= counter + 1;
+	end
+	
    always @(posedge wb_clk_i) begin
-      wb_cyc_o <= 0;
-      
+      wb_cyc_o <= counter > 'hf;
+		wb_stb_o <= counter > 'hf;
+      wb_we_o <= 0;
    end
    
 
