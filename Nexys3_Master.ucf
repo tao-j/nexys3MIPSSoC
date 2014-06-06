@@ -165,6 +165,17 @@ NET "BTN<3>"         LOC = "C9"  | IOSTANDARD = "LVCMOS33";   #Bank = 0, Pin nam
 #NET "Hsync"          LOC = "N6"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L47P,                          Sch name = HSYNC
 #NET "Vsync"          LOC = "P7"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L47N,                          Sch name = VSYNC
 
+NET "rgb<0>"      LOC = "U7"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L43P,                          Sch name = RED0
+NET "rgb<1>"      LOC = "V7"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L43N,                          Sch name = RED1
+NET "rgb<2>"      LOC = "N7"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L44P,                          Sch name = RED2
+NET "rgb<3>"    LOC = "P8"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L44N,                          Sch name = GRN0
+NET "rgb<4>"    LOC = "T6"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L45P,                          Sch name = GRN1
+NET "rgb<5>"    LOC = "V6"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L45N,                          Sch name = GRN2
+NET "rgb<6>"     LOC = "R7"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L46P,                          Sch name = BLU1
+NET "rgb<7>"     LOC = "T7"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L46N,                          Sch name = BLU2
+
+NET "hsync"          LOC = "N6"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L47P,                          Sch name = HSYNC
+NET "vsync"          LOC = "P7"  | IOSTANDARD = "LVCMOS33";   # Bank = 2, Pin name = IO_L47N,                          Sch name = VSYNC
 
 ## 12 pin connectors
 

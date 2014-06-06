@@ -37,7 +37,9 @@ cellram_wait_i,
 cellram_we_n_o,
 cellram_cre_o,
 cellram_lb_n_o,
-cellram_ub_n_o
+cellram_ub_n_o,
+
+   vsync, rgb, hsync
  );
    parameter cellram_dq_width = 16;
    parameter cellram_adr_width = 23;
@@ -65,6 +67,7 @@ cellram_ub_n_o
    output                  cellram_lb_n_o;
 
  wire clk_50mhz;
+ wire vga_clk;
  wire Clk_CPU, rst,clk_m, mem_w,data_ram_we,GPIOf0000000_we,GPIOe0000000_we,counter_we;
  wire counter_OUT0,counter_OUT1,counter_OUT2;
  wire [1:0]Counter_set;
@@ -88,10 +91,11 @@ cellram_ub_n_o
     .CLK_IN1(sys_clk),      // IN
     // Clock out ports
     .CLK_OUT1(clk_50mhz),     // OUT
+	 .CLK_OUT2(vga_clk),     // OUT
     // Status and control signals
     .RESET(sys_ret),// IN
     .LOCKED(sys_locked));      // OUT
-
+	
  assign MIO_ready=~button_out[1];
  assign rst=~sys_locked;
  assign SW2=SW_OK[2];
@@ -244,10 +248,20 @@ assign dpdot = {cellram_mst_sel, mem_w, BIU_ready};//vga_gnt, cpu_gnt
  .wb_dat_i(wb_m1_cpu_dat_o),
  .wb_ack_i(wb_m1_cpu_ack_o)
     );
-	
-vcache vchache0(
+
+output			hsync;			// From vchache0 of vcache.v
+output [7:0]		rgb;			// From vchache0 of vcache.v
+output			vsync;			// From vchache0 of vcache.v
+
+vcache 
+     #(
+       .vram_adr_base('h0)
+	   )
+		vchache0
+(
  .wb_clk_i(clk_50mhz),
  .wb_rst_i(rst),
+ 
  //.wb_m0_vcache_gnt(wb_m0_vcache_gnt),
  .wb_adr_o(wb_m0_vcache_adr_i),
  .wb_dat_o(wb_m0_vcache_dat_i),
@@ -257,8 +271,14 @@ vcache vchache0(
  .wb_we_o (wb_m0_vcache_we_i ),
  .wb_dat_i(wb_m0_vcache_dat_o),
  .wb_ack_i(wb_m0_vcache_ack_o),
- /*AUTOINST*/
-	);
+		//vga
+		// Outputs
+		.rgb			(rgb[7:0]),
+		.hsync			(hsync),
+		.vsync			(vsync),
+		// Inputs
+		.vga_clk		(vga_clk)
+);
 	
 wire [1:0] 				  cellram_mst_sel;
 arbiter arbiter0(
@@ -297,7 +317,6 @@ arbiter arbiter0(
 		 //.wb_m1_cpu_gnt		(wb_m1_cpu_gnt),
 		 //.wb_m0_vcache_gnt	(wb_m0_vcache_gnt)
 );
-
 
    cellram_ctrl
      /* Use the simple flash interface */

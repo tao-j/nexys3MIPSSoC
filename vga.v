@@ -1,4 +1,4 @@
-module vga_sync(clk_p, rst, hsync, vsync, x, y, ve);
+module vga(clk_p, rst, hsync, vsync, x, y, ve);
 	input wire clk_p;
 	input wire rst;
 	output wire hsync, vsync;
@@ -12,14 +12,26 @@ module vga_sync(clk_p, rst, hsync, vsync, x, y, ve);
 	//Vertical (field)  					3clk_l		6clk_l					29clk_l = 806
 	
 	//60Hz 0 < x < 799, 0 < y < 599 40Mhz clk_d
-	parameter h_pixel = 'd799;
-	parameter v_pixel = 'd599;
-	parameter h_front_porch = 'd40;
-	parameter h_sync_pulse = 'd128;
-	parameter h_back_porch = 'd88;
-	parameter v_front_porch = 'd1;
-	parameter v_sync_pulse = 'd4;
-	parameter v_back_porch = 'd23;
+//	parameter h_pixel = 'd799;
+//	parameter v_pixel = 'd599;
+//	parameter h_front_porch = 'd40;
+//	parameter h_sync_pulse = 'd128;
+//	parameter h_back_porch = 'd88;
+//	parameter v_front_porch = 'd1;
+//	parameter v_sync_pulse = 'd4;
+//	parameter v_back_porch = 'd23;
+//	parameter line = h_pixel + h_front_porch + h_sync_pulse + h_back_porch;
+//	parameter field = v_pixel + v_front_porch + v_sync_pulse + v_back_porch;
+	
+	//60Hz 0 < x < 639, 0 < y < 479 25Mhz clk_d
+	parameter h_pixel = 'd639;
+	parameter v_pixel = 'd479;
+	parameter v_front_porch = 'd10;
+	parameter v_sync_pulse = 'd2;
+	parameter v_back_porch = 'd29; //33
+	parameter h_front_porch = 'd16;
+	parameter h_sync_pulse = 'd96;
+	parameter h_back_porch = 'd48;
 	parameter line = h_pixel + h_front_porch + h_sync_pulse + h_back_porch;
 	parameter field = v_pixel + v_front_porch + v_sync_pulse + v_back_porch;
 	
@@ -53,8 +65,15 @@ module vga_sync(clk_p, rst, hsync, vsync, x, y, ve);
 	
 	assign hsync = (x_i >= h_sync_pulse) ? 1: 0;
 	assign vsync = (y_i >= v_sync_pulse) ? 1: 0;
-	assign ve = (x_i >= h_sync_pulse + h_back_porch && x_i <= line - h_front_porch) && (y_i >= v_sync_pulse + v_back_porch && y_i <= field - v_front_porch);
-	assign x = (ve) ? x_i - h_back_porch - h_sync_pulse : 0;
-	assign y = (ve) ? y_i - v_back_porch - v_sync_pulse : 0;
-	
+	assign ve = 0
+				||	(x_i >= h_sync_pulse + h_back_porch && x_i <= line - h_front_porch) && (y_i >= v_sync_pulse + v_back_porch && y_i <= field - v_front_porch)
+//				&&  ( (|y[2:0]))
+//				|| (x_i >= h_sync_pulse + h_back_porch && x_i <=1+ line - h_front_porch) && (y_i >= v_sync_pulse + v_back_porch && y_i <= field - v_front_porch)
+//				&&  (!(|y[2:0]))
+				;
+	//assign x = (ve) ? x_i - h_back_porch - h_sync_pulse : 0;
+	//assign y = (ve) ? y_i - v_back_porch - v_sync_pulse : 0;
+	assign x = x_i - h_back_porch - h_sync_pulse;
+	assign y = y_i - v_back_porch - v_sync_pulse;
+
 endmodule

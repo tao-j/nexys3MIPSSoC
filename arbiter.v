@@ -46,14 +46,14 @@ module arbiter(/*AUTOARG*/
    //output wire 				  wb_m1_cpu_gnt;
    //output wire 				  wb_m0_vcache_gnt;
    
-   output wire [1:0] 				  cellram_mst_sel;
+   output reg [1:0] 				  cellram_mst_sel;
 	
-	assign cellram_mst_sel[1] = wb_m0_vcache_cyc_i & wb_m0_vcache_stb_i 
+	//assign cellram_mst_sel[1] = wb_m0_vcache_cyc_i & wb_m0_vcache_stb_i 
 	                 //& !(cellram_mst_sel[1]  & (wb_s0_cellram_wb_ack_i | cellram_arb_reset))
-						  ;
-	assign cellram_mst_sel[0] = !cellram_mst_sel[1] & wb_m1_cpu_cyc_i & wb_m1_cpu_stb_i
+	//					  ;
+	//assign cellram_mst_sel[0] = !cellram_mst_sel[1] & wb_m1_cpu_cyc_i & wb_m1_cpu_stb_i
 	                 //& !(cellram_mst_sel[0]  & (wb_s0_cellram_wb_ack_i | cellram_arb_reset))
-						  ;
+	//					  ;
 
    reg [9:0] 				  cellram_arb_timeout;
    wire 				  cellram_arb_reset;
@@ -61,22 +61,22 @@ module arbiter(/*AUTOARG*/
    //assign wb_m1_cpu_gnt = cellram_mst_sel[0];
    //assign wb_m0_vcache_gnt = cellram_mst_sel[1];
 
-//   always @(posedge wb_clk)
-//     if (wb_rst)
-//       cellram_mst_sel <= 0;
-//     else begin
-//	if (cellram_mst_sel==2'b00) begin
-//	   /* wait for new access from masters. vcache takes priority */
-//	   if (wb_m0_vcache_cyc_i & wb_m0_vcache_stb_i) //if (wbs_d_cellram_cyc_i & wbs_d_cellram_stb_i)
-//	     cellram_mst_sel[1] <= 1;
-//     else if (wb_m1_cpu_cyc_i & wb_m1_cpu_stb_i) //else if (wbs_i_cellram_cyc_i & wbs_i_cellram_stb_i)
-//	     cellram_mst_sel[0] <= 1;
-//	end
-//	else begin
-//	   if (wb_s0_cellram_wb_ack_i | cellram_arb_reset)
-//	     cellram_mst_sel <= 0;
-//	end // else: !if(cellram_mst_sel==2'b00)
-//     end // else: !if(wb_rst)
+   always @(posedge wb_clk)
+     if (wb_rst)
+       cellram_mst_sel <= 0;
+     else begin
+	if (cellram_mst_sel==2'b00) begin
+	   /* wait for new access from masters. vcache takes priority */
+	   if (wb_m0_vcache_cyc_i & wb_m0_vcache_stb_i) //if (wbs_d_cellram_cyc_i & wbs_d_cellram_stb_i)
+	     cellram_mst_sel[1] <= 1;
+     else if (wb_m1_cpu_cyc_i & wb_m1_cpu_stb_i) //else if (wbs_i_cellram_cyc_i & wbs_i_cellram_stb_i)
+	     cellram_mst_sel[0] <= 1;
+	end
+	else begin
+	   if (wb_s0_cellram_wb_ack_i) //| cellram_arb_reset) //TODO: reset
+	     cellram_mst_sel <= 0;
+	end // else: !if(cellram_mst_sel==2'b00)
+     end // else: !if(wb_rst)
 
    reg [3:0] cellram_rst_counter;
    always @(posedge wb_clk or posedge wb_rst)
