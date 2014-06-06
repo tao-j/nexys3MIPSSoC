@@ -30,11 +30,12 @@
  CPU_MIO,
  state,
  Ireq,
- Iack
+ Iack,
+ Enable_i
  );
 
 
- input clk,reset,MIO_ready,Ireq;
+ input clk,reset,MIO_ready,Ireq,Enable_i;
  output [31:0] pc_out;
  output [31:0] Inst;
  output mem_w, breq_o, CPU_MIO,Iack;
@@ -50,7 +51,7 @@
 
  wire [1:0] RegDst,ALUSrcB,IntCause;
  wire breq_o,CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,EPCWrite,Co0Write;
- wire reset,MIO_ready, mem_w,zero,overflow,Ireq,Iack;
+ wire reset,MIO_ready, mem_w,zero,overflow,Ireq,Iack,Enable_i;
 
  // assign rst=reset;
  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
@@ -83,7 +84,8 @@
  .EPCWrite(EPCWrite),
  .Co0Write(Co0Write),
  .Ireq(Ireq),
- .Iack(Iack)
+ .Iack(Iack),
+ .Enable_i(Enable_i)
  );
 
  data_path x_datapath(.clk(clk),

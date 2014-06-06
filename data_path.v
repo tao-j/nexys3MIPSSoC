@@ -175,7 +175,7 @@ Coprocessor coprocessor0 (
  3'b000: if (MIO_ready) PC_Current <=res; // PC+4
  3'b001: PC_Current <=ALU_Out; // branch
  3'b010: PC_Current <={PC_Current[31:28],Inst_R[25:0],2'b00}; // jump
- 3'b011: PC_Current <=32'h00000180; // j$r
+ 3'b011: PC_Current <=32'h30000180; // j$r
  3'b100: PC_Current <=epc_out;
  endcase
  end

@@ -170,7 +170,8 @@ cellram_ub_n_o
  .CPU_MIO(CPU_MIO),
  .Ireq(Ireq),
  .Iack(Iack),
- .state(state) //Test
+ .state(state), //Test
+ .Enable_i(&clkdiv[27:0] | SW2)
  );
 
  Mem_B RAM_I_D(.clka(clk_m),
@@ -180,7 +181,7 @@ cellram_ub_n_o
  .douta(ram_data_out)
  ); // Addre_Bus [9 : 0] ,Data_Bus [31 : 0]
 
-assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
+assign dpdot = {Ireq, Iack, mem_w, BIU_ready};
 
  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  wire [31:0] MIO_data2bus, MIO_data4bus;

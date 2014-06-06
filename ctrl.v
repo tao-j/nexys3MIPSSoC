@@ -44,11 +44,12 @@ module ctrl(clk,
 	EPCWrite,
 	Co0Write,
 	Ireq,
-	Iack
+	Iack,
+	Enable_i
 	);
 
 input clk,reset;
-input zero,overflow,MIO_ready,Ireq;
+input zero,overflow,MIO_ready,Ireq,Enable_i;
 input [31:0] Inst_in;
 output [2:0] ALU_operation,MemtoReg,PCSource;
 output CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,IntCause,EPCWrite,Iack,Co0Write;
@@ -56,7 +57,7 @@ output [4:0] state_out;
 output [1:0] RegDst,ALUSrcB;
 
 wire [4:0] state_out;
-wire reset,MIO_ready,Ireq;
+wire reset,MIO_ready,Ireq,Enable_i;
 reg CPU_MIO,MemRead,MemWrite,IorD,IRWrite,RegWrite,ALUSrcA,PCWrite,PCWriteCond,Beq,CauseWrite,EPCWrite,Iack,Co0Write;
 reg [1:0] RegDst,ALUSrcB,IntCause;
 reg [2:0] ALU_operation, MemtoReg, PCSource;
@@ -72,7 +73,7 @@ parameter AND=3'b000, OR=3'b001, ADD=3'b010, SUB=3'b110, NOR=3'b100, SLT=3'b111,
 // EX_INT                                                           0,       1,      1,          0,   0,      0,       0,      0,           00,           11,     01,      0,       0,    00,      0
 // EX_ERET                          1,          0,       0,         0,       0,      1,          0,   0,      0,       0,      0,           00,           00,     11,      0,       0,    00,      0
 // EX_JM                                                                             1,          0,   0,      0,       0,      0,           00,           10,     11,      0,       0,    00,      0
-// IF                                                                         1,          0,   0,      1,       0,      1,      00,      00,     01,      0,       0,    00,      1
+// IF                                                                                1,          0,   0,      1,       0,      1,           00,           00,     01,      0,       0,    00,      1
 // IF                                                                         0,          0,   0,      0,       0,      0,      00,      00,     11,      0,       0,    00,      0
 // 1 0 0 0 0 0 10 10 00 0 0 00 0
 //
@@ -108,8 +109,11 @@ else begin
 			end
 		end
 
-		ID: begin
-
+		ID: if (!Enable_i) begin
+			`CPU_ctrl_signals<=`nSignals'h00060;
+			ALU_operation<=ADD;
+			state <= ID;
+		end else begin
 			case (Inst_in[31:26])
 				6'b000000:begin //R-type OP
 					`CPU_ctrl_signals<=`nSignals'h00010;
