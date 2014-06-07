@@ -1,9 +1,17 @@
-module vga(clk_p, rst, hsync, vsync, x, y, ve);
+module vga(/*AUTOARG*/
+   // Outputs
+   hsync, vsync, x, y, ve, newline, newfield,
+   // Inputs
+   clk_p, rst
+   );
 	input wire clk_p;
 	input wire rst;
 	output wire hsync, vsync;
 	output wire [9:0] x, y; //1023
 	output wire ve;
+	output wire newline, newfield;
+	assign newline = x_i == 0;
+	assign newfield = y_i == 0;
 	
 	reg [10:0] x_i, y_i; //2047
 	//wire clk_l; //clk_p pixel clock, clk_l line clock

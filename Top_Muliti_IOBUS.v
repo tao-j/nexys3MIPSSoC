@@ -255,7 +255,7 @@ output			vsync;			// From vchache0 of vcache.v
 
 vcache 
      #(
-       .vram_adr_base('h0)
+       .vram_adr_base('hf80000)
 	   )
 		vchache0
 (

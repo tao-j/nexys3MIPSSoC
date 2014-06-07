@@ -43,7 +43,7 @@ module vcache(/*AUTOARG*/
 //			;
 	assign wb_sel_o = 4'b1111;
 	assign wb_we_o = 0;
-	
+
 /*	reg write_start;
 	reg wea;
 	wire web = 0;
@@ -99,7 +99,7 @@ module vcache(/*AUTOARG*/
 	reg [16:0] counter, counter_line;
 	assign wb_adr_o = vram_adr_base + (counter_line + counter) * 4;
 	assign wb_cyc_o = (state == `IDLE)? 0 : 1;
-	assign wb_stb_o = (state == `IDLE)? 0 : 1;
+	assign wb_stb_o = ((state == `IDLE)? 0 : 1) & !wb_ack_i;
 
 	always @(posedge wb_clk_i) begin
 		if (wb_ack_i) begin
@@ -115,7 +115,7 @@ module vcache(/*AUTOARG*/
 		if (y >= 0 && y < 480) begin
 			case(state)
 				`IDLE: begin 
-					if (hsync) state <= `FILL;
+					if (newline) state <= `FILL;
 				end
 				`FILL: begin
 					
@@ -192,12 +192,14 @@ module vcache(/*AUTOARG*/
 */
  //F**k yourself, use fifo
  wire line_rst = x == 'd640;
+ wire newline, newfield;
 	vcache_fifo fifo0 (
   .wr_clk(wb_clk_i), // input wr_clk
   .rd_clk(vga_clk), // input rd_clk
-  .rst(line_rst),
+  .rst(x == 640 || newfield),
 //  .rst(fifo_rst),
-  .din(wb_dat_i), // input [31 : 0] din
+	.din(wb_dat_i),
+//  .din({wb_dat_i[23:16], wb_dat_i[31:24], wb_dat_i[7:0], wb_dat_i[15:8]} ), // input [31 : 0] din
   .wr_en(wb_ack_i), // input wr_en
   .rd_en(ve), // input rd_en
   .dout(dout_rgb) // output [7 : 0] dout
@@ -219,6 +221,8 @@ module vcache(/*AUTOARG*/
 	    .x				(x[9:0]),
 	    .y				(y[9:0]),
 	    .ve				(ve),
+		 .newline		(newline),
+		 .newfield		(newfield),
 	    // Inputs
 	    .clk_p			(clk_p)
    );
