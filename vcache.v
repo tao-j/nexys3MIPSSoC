@@ -6,7 +6,7 @@ module vcache(/*AUTOARG*/
    wb_clk_i, wb_rst_i, vga_clk, wb_ack_i, wb_err_i, wb_rty_i,
    wb_dat_i
    );
-
+	
    input wire  wb_clk_i;
    input wire  wb_rst_i;
 
@@ -20,9 +20,9 @@ module vcache(/*AUTOARG*/
    input wire  wb_err_i; // termination w/ error
    input wire  wb_rty_i; // termination w/ retry
    input wire [31:0] wb_dat_i; // input data bus
-   output reg       wb_cyc_o; // cycle valid output
+   output        wb_cyc_o; // cycle valid output
    output  [31:0] wb_adr_o; // address bus outputs
-   output reg       wb_stb_o; // strobe output
+   output        wb_stb_o; // strobe output
    output        wb_we_o; // indicates write transfer
    output  [3:0]  wb_sel_o; // byte select outputs
    output  [31:0] wb_dat_o; // output data bus
@@ -31,20 +31,19 @@ module vcache(/*AUTOARG*/
    wire  [9:0]    y;
    wire     ve;
 
-	parameter vram_adr_base = 'hf;
+	parameter vram_adr_base = 'hf80000;
 	
-	wire rd_en;//, wr_en;
+	//wire rd_en;//, wr_en;
 	//wire full, almost_full, empty, almost_empty;
 	//assign rgb = ve? x / 2 + y / 2 : 0;
 	wire [7:0] dout_rgb;
 	assign rgb = ve ? dout_rgb : 0;
-	assign rd_en = ve
+//	assign rd_en = ve
 //		|| (0 && x >= 480 && x <= 483) && (!(|y[2:0]) && y[3]) || (0 && x >= 480 && x <= 484) && (!(|y[2:0]) && !y[3])
-			;
+//			;
 	assign wb_sel_o = 4'b1111;
 	assign wb_we_o = 0;
-
-
+	
 /*	reg write_start;
 	reg wea;
 	wire web = 0;
@@ -94,8 +93,41 @@ module vcache(/*AUTOARG*/
   .doutb(dout_rgb) // output [7 : 0] doutb
 	);*/
 
+	`define FILL  1
+	`define IDLE  0
+	reg state;
+	reg [16:0] counter, counter_line;
+	assign wb_adr_o = vram_adr_base + (counter_line + counter) * 4;
+	assign wb_cyc_o = (state == `IDLE)? 0 : 1;
+	assign wb_stb_o = (state == `IDLE)? 0 : 1;
 
-	assign fifo_rst = ((y == 'd479) && (x == 'd640)) || ((y == 'd479) && (x == 'd641));
+	always @(posedge wb_clk_i) begin
+		if (wb_ack_i) begin
+			if (counter_line == 159) begin
+				state <= `IDLE;
+				counter_line <= 0;
+				counter <= counter + 160;
+			end
+			else begin
+				counter_line <= counter_line + 1;
+			end
+		end
+		if (y >= 0 && y < 480) begin
+			case(state)
+				`IDLE: begin 
+					if (hsync) state <= `FILL;
+				end
+				`FILL: begin
+					
+				end
+			endcase
+		end
+		else begin
+			counter <= 0;
+			counter_line <= 0;
+		end
+	end
+/*	assign fifo_rst = ((y == 'd479) && (x == 'd640)) || ((y == 'd479) && (x == 'd641));
 	`define FILL  0
 	`define IDLE  1
 	reg fifo_state;
@@ -112,7 +144,7 @@ module vcache(/*AUTOARG*/
 				if (counter_line == 'd159) begin
 					counter_line <= 0;
 					if (counter == 0)	counter <= counter + 'd159;
-					else counter <= counter <= 'd160;
+					else counter <= counter + 'd160;
 				end
 				else begin
 					counter_line <= counter_line + 1;
@@ -147,16 +179,17 @@ module vcache(/*AUTOARG*/
 			end
 		endcase
 		
-/*		if(prog_empty & !prog_full) begin
-			wb_cyc_o <= 1;
-			wb_stb_o <= 1;
-		end
-		else begin
-			wb_cyc_o <= 0;
-			wb_stb_o <= 0;
-		end*/
+//		if(prog_empty & !prog_full) begin
+//			wb_cyc_o <= 1;
+//			wb_stb_o <= 1;
+//		end
+//		else begin
+//			wb_cyc_o <= 0;
+//			wb_stb_o <= 0;
+//		end
 		
 	end
+*/
  //F**k yourself, use fifo
  wire line_rst = x == 'd640;
 	vcache_fifo fifo0 (
@@ -166,7 +199,7 @@ module vcache(/*AUTOARG*/
 //  .rst(fifo_rst),
   .din(wb_dat_i), // input [31 : 0] din
   .wr_en(wb_ack_i), // input wr_en
-  .rd_en(rd_en), // input rd_en
+  .rd_en(ve), // input rd_en
   .dout(dout_rgb) // output [7 : 0] dout
 //  .wr_ack(wr_ack), // output wr_ack
 		//ack is asserted when the previous write cycle succeeded
