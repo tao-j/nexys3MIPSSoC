@@ -34,7 +34,9 @@ cellram_wait_i,
 cellram_we_n_o,
 cellram_cre_o,
 cellram_lb_n_o,
-cellram_ub_n_o
+cellram_ub_n_o,
+
+   vsync, rgb, hsync
  );
    parameter cellram_dq_width = 16;
    parameter cellram_adr_width = 23;
@@ -62,6 +64,7 @@ cellram_ub_n_o
    output                  cellram_lb_n_o;
 
  wire clk_50mhz;
+ wire vga_clk;
  wire Clk_CPU, rst,clk_m, mem_w,data_ram_we,GPIOf0000000_we,GPIOe0000000_we,counter_we;
  wire counter_OUT0,counter_OUT1,counter_OUT2;
  wire [1:0]Counter_set;
@@ -85,10 +88,11 @@ cellram_ub_n_o
     .CLK_IN1(sys_clk),      // IN
     // Clock out ports
     .CLK_OUT1(clk_50mhz),     // OUT
+	 .CLK_OUT2(vga_clk),     // OUT
     // Status and control signals
     .RESET(sys_ret),// IN
     .LOCKED(sys_locked));      // OUT
-
+	
  assign MIO_ready=~button_out[1];
  assign rst=~sys_locked;
  assign SW2=SW_OK[2];
@@ -176,7 +180,8 @@ cellram_ub_n_o
  .douta(ram_data_out)
  ); // Addre_Bus [9 : 0] ,Data_Bus [31 : 0]
 
-assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
+//assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
+assign dpdot = {cellram_mst_sel, mem_w, BIU_ready};//vga_gnt, cpu_gnt
 
  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  wire [31:0] MIO_data2bus, MIO_data4bus;
@@ -191,6 +196,27 @@ assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
    wire           cellram_wb_stb_i;
    wire           cellram_wb_we_i;
    wire           cellram_wb_ack_o;
+
+   wire [31:0] 	       		  wb_m0_vcache_adr_i;
+   wire [31:0] 	       		  wb_m0_vcache_dat_i;
+   wire [3:0] 	       		  wb_m0_vcache_sel_i;
+   wire 				  wb_m0_vcache_cyc_i;
+   wire 				  wb_m0_vcache_stb_i;
+   wire 				  wb_m0_vcache_we_i;
+   wire [31:0]  			  wb_m0_vcache_dat_o;
+   wire 				  wb_m0_vcache_ack_o;
+
+   wire [31:0] 	       		  wb_m1_cpu_adr_i;
+   wire [31:0] 	       		  wb_m1_cpu_dat_i;
+   wire [3:0] 	       		  wb_m1_cpu_sel_i;
+   wire 				  wb_m1_cpu_cyc_i;
+   wire 				  wb_m1_cpu_stb_i;
+   wire 				  wb_m1_cpu_we_i;
+   wire [31:0] 	       		  wb_m1_cpu_dat_o;
+   wire 				  wb_m1_cpu_ack_o;
+
+   wire 				  wb_m1_cpu_gnt;
+   wire 				  wb_m0_vcache_gnt;
 
  BIU biu0(
  .clk(clk_50mhz),
@@ -209,15 +235,85 @@ assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
  .MIO_data4bus_i(MIO_data4bus), //write to CPU
  .MIO_ready_i(MIO_ready),
 
- .wb_adr_o(cellram_wb_adr_i),
- .wb_dat_o(cellram_wb_dat_i),
- .wb_stb_o(cellram_wb_stb_i),
- .wb_cyc_o(cellram_wb_cyc_i),
- .wb_we_o (cellram_wb_we_i ),
- .wb_sel_o(cellram_wb_sel_i),
- .wb_dat_i(cellram_wb_dat_o),
- .wb_ack_i(cellram_wb_ack_o)
+ //.wb_m1_cpu_gnt(wb_m1_cpu_gnt),
+ .wb_adr_o(wb_m1_cpu_adr_i),
+ .wb_dat_o(wb_m1_cpu_dat_i),
+ .wb_sel_o(wb_m1_cpu_sel_i),
+ .wb_cyc_o(wb_m1_cpu_cyc_i),
+ .wb_stb_o(wb_m1_cpu_stb_i),
+ .wb_we_o (wb_m1_cpu_we_i ),
+ .wb_dat_i(wb_m1_cpu_dat_o),
+ .wb_ack_i(wb_m1_cpu_ack_o)
     );
+
+output			hsync;			// From vchache0 of vcache.v
+output [7:0]		rgb;			// From vchache0 of vcache.v
+output			vsync;			// From vchache0 of vcache.v
+
+vcache 
+     #(
+       .vram_adr_base('hf80000)
+	   )
+		vchache0
+(
+ .wb_clk_i(clk_50mhz),
+ .wb_rst_i(rst),
+ 
+ //.wb_m0_vcache_gnt(wb_m0_vcache_gnt),
+ .wb_adr_o(wb_m0_vcache_adr_i),
+ .wb_dat_o(wb_m0_vcache_dat_i),
+ .wb_sel_o(wb_m0_vcache_sel_i),
+ .wb_cyc_o(wb_m0_vcache_cyc_i),
+ .wb_stb_o(wb_m0_vcache_stb_i),
+ .wb_we_o (wb_m0_vcache_we_i ),
+ .wb_dat_i(wb_m0_vcache_dat_o),
+ .wb_ack_i(wb_m0_vcache_ack_o),
+		//vga
+		// Outputs
+		.rgb			(rgb[7:0]),
+		.hsync			(hsync),
+		.vsync			(vsync),
+		// Inputs
+		.vga_clk		(vga_clk)
+);
+	
+wire [1:0] 				  cellram_mst_sel;
+arbiter arbiter0(
+   .wb_clk(clk_50mhz),
+   .wb_rst(rst),
+   
+   .cellram_mst_sel(cellram_mst_sel),
+	
+   .wb_s0_cellram_wb_adr_o(cellram_wb_adr_i),
+   .wb_s0_cellram_wb_dat_o(cellram_wb_dat_i),
+   .wb_s0_cellram_wb_sel_o(cellram_wb_sel_i),
+   .wb_s0_cellram_wb_stb_o(cellram_wb_stb_i),
+   .wb_s0_cellram_wb_cyc_o(cellram_wb_cyc_i),
+   .wb_s0_cellram_wb_we_o (cellram_wb_we_i ),
+   .wb_s0_cellram_wb_dat_i(cellram_wb_dat_o),
+   .wb_s0_cellram_wb_ack_i(cellram_wb_ack_o),
+
+		 .wb_m0_vcache_dat_o	(wb_m0_vcache_dat_o[31:0]),
+		 .wb_m0_vcache_ack_o	(wb_m0_vcache_ack_o),
+		 .wb_m0_vcache_adr_i	(wb_m0_vcache_adr_i[31:0]),
+		 .wb_m0_vcache_dat_i	(wb_m0_vcache_dat_i[31:0]),
+		 .wb_m0_vcache_sel_i	(wb_m0_vcache_sel_i[3:0]),
+		 .wb_m0_vcache_cyc_i	(wb_m0_vcache_cyc_i),
+		 .wb_m0_vcache_stb_i	(wb_m0_vcache_stb_i),
+		 .wb_m0_vcache_we_i	(wb_m0_vcache_we_i),
+		 
+		 .wb_m1_cpu_dat_o	(wb_m1_cpu_dat_o[31:0]),
+		 .wb_m1_cpu_ack_o	(wb_m1_cpu_ack_o),
+		 .wb_m1_cpu_adr_i	(wb_m1_cpu_adr_i[31:0]),
+		 .wb_m1_cpu_dat_i	(wb_m1_cpu_dat_i[31:0]),
+		 .wb_m1_cpu_sel_i	(wb_m1_cpu_sel_i[3:0]),
+		 .wb_m1_cpu_cyc_i	(wb_m1_cpu_cyc_i),
+		 .wb_m1_cpu_stb_i	(wb_m1_cpu_stb_i),
+		 .wb_m1_cpu_we_i	(wb_m1_cpu_we_i)
+		 
+		 //.wb_m1_cpu_gnt		(wb_m1_cpu_gnt),
+		 //.wb_m0_vcache_gnt	(wb_m0_vcache_gnt)
+);
 
    cellram_ctrl
      /* Use the simple flash interface */

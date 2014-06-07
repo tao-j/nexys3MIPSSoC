@@ -27,6 +27,7 @@ input wire rst,
  input  wire      wb_err_i, // termination w/ error
  input  wire      wb_rty_i, // termination w/ retry
  input  wire [31:0]       wb_dat_i, // input data bus
+ //input  wire      wb_m1_cpu_gnt, // grant access to bus
  output reg      wb_cyc_o, // cycle valid output
  output reg [31:0]      wb_adr_o, // address bus outputs
  output reg      wb_stb_o, // strobe output
@@ -71,7 +72,7 @@ always @(*) begin
         4'h3: begin
             wb_we_o        <= Cpu_mem_w_i;
             Cpu_data4bus_o <= wb_dat_i;
-            Cpu_ready_o    <= wb_ack_i;
+            Cpu_ready_o    <= wb_ack_i;// & wb_m1_cpu_gnt;
             wb_cyc_o       <= Cpu_req_i;
             wb_stb_o       <= Cpu_req_i;
         end
