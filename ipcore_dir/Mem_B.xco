@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.6
-# Date: Fri May 16 06:11:55 2014
+# Date: Fri Jun  6 12:23:48 2014
 #
 ##############################################################
 #
@@ -46,7 +46,7 @@ CSET axi_id_width=4
 CSET axi_slave_type=Memory_Slave
 CSET axi_type=AXI4_Full
 CSET byte_size=9
-CSET coe_file=C:\Users\GongBingChen\Documents\ORG_LAB\project3\RAM_I_D.coe
+CSET coe_file=/home/gongbingchen/Documents/nexys3MIPSSoC/RAM_I_D_E.coe
 CSET collision_warnings=ALL
 CSET component_name=Mem_B
 CSET disable_collision_warnings=false
@@ -105,4 +105,4 @@ CSET write_width_b=32
 MISC pkg_timestamp=2012-11-19T16:22:25Z
 # END Extra information
 GENERATE
-# CRC: 88eea50b
+# CRC: 51e3c0e4

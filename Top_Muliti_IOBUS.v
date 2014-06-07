@@ -45,7 +45,7 @@ cellram_ub_n_o,
    parameter cellram_read_cycles = 4;  // elqv/Tclk = 95 / 15 ns (66MHz)
 
  input sys_clk;
- input [3:0] BTN;
+ input [4:0] BTN;
  input [7:0] SW;
  output [7:0] LED,SEGMENT;
  output [3:0] AN_SEL;
@@ -70,7 +70,7 @@ cellram_ub_n_o,
  wire [1:0]Counter_set;
  wire [4:0] state;
  wire [3:0] digit_anode,blinke;
- wire [3:0]button_out;
+ wire [4:0] button_out;
  wire [7:0] SW_OK,SW,led_out,LED,SEGMENT; //led_out is current LED light
  wire [9:0] rom_addr,ram_addr;
  wire [21:0]GPIOf0;
@@ -82,6 +82,9 @@ cellram_ub_n_o,
  wire CPU_MIO;
  wire sys_ret=button_out[3];
  wire sys_locked;
+ reg Ireq;
+ reg Ireq_hold;
+ wire Iack;
 
   clkgen clkgen0
    (// Clock in ports
@@ -169,8 +172,10 @@ cellram_ub_n_o,
  .data_out(Cpu_data2bus),
  .data_in(Cpu_data4bus),
  .CPU_MIO(CPU_MIO),
-
- .state(state) //Test
+ .Ireq(Ireq),
+ .Iack(Iack),
+ .state(state), //Test
+ .Enable_i(&clkdiv[27:0] | SW2)
  );
 
  Mem_B RAM_I_D(.clka(clk_m),
@@ -181,7 +186,8 @@ cellram_ub_n_o,
  ); // Addre_Bus [9 : 0] ,Data_Bus [31 : 0]
 
 //assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
-assign dpdot = {cellram_mst_sel, mem_w, BIU_ready};//vga_gnt, cpu_gnt
+//assign dpdot = {cellram_mst_sel, mem_w, BIU_ready};//vga_gnt, cpu_gnt
+assign dpdot = {Ireq, Iack, mem_w, BIU_ready};
 
  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  wire [31:0] MIO_data2bus, MIO_data4bus;
@@ -422,4 +428,14 @@ arbiter arbiter0(
 
  // assign AN_SEL=(SW_OK[3]) ? digit_anode : digit_anode|(blinke&{clkdiv[24],clkdiv[24],clkdiv[24],clkdiv[24]});
 
+ always @(posedge Clk_CPU or posedge rst) begin : proc_
+   if(rst) begin
+     Ireq <= 0;
+   end else if(Iack) begin
+     Ireq <= 0;
+   end else begin
+     Ireq_hold <= button_out[4];
+     if(!Ireq_hold && button_out[4]) Ireq <= 1;
+   end
+ end
  endmodule
