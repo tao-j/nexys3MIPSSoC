@@ -36,7 +36,8 @@ cellram_cre_o,
 cellram_lb_n_o,
 cellram_ub_n_o,
 
-   vsync, rgb, hsync
+   vsync, rgb, hsync,
+   ps2_clk,ps2_dat
  );
    parameter cellram_dq_width = 16;
    parameter cellram_adr_width = 23;
@@ -91,11 +92,11 @@ cellram_ub_n_o,
     .CLK_IN1(sys_clk),      // IN
     // Clock out ports
     .CLK_OUT1(clk_50mhz),     // OUT
-	 .CLK_OUT2(vga_clk),     // OUT
+	  .CLK_OUT2(vga_clk),     // OUT
     // Status and control signals
     .RESET(sys_ret),// IN
     .LOCKED(sys_locked));      // OUT
-	
+
  assign MIO_ready=~button_out[1];
  assign rst=~sys_locked;
  assign SW2=SW_OK[2];
@@ -185,10 +186,6 @@ cellram_ub_n_o,
  .douta(ram_data_out)
  ); // Addre_Bus [9 : 0] ,Data_Bus [31 : 0]
 
-//assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
-//assign dpdot = {cellram_mst_sel, mem_w, BIU_ready};//vga_gnt, cpu_gnt
-assign dpdot = {Ireq, Iack, mem_w, BIU_ready};
-
  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  wire [31:0] MIO_data2bus, MIO_data4bus;
  wire [31:0] MIO_addr_bus;
@@ -224,6 +221,13 @@ assign dpdot = {Ireq, Iack, mem_w, BIU_ready};
    wire 				  wb_m1_cpu_gnt;
    wire 				  wb_m0_vcache_gnt;
 
+   wire [7:0]     ps2_wb_dat_i;
+   wire [7:0]     ps2_wb_dat_o;
+   wire [0:0]     ps2_wb_adr_i;
+   wire           ps2_wb_stb_i;
+   wire           ps2_wb_we_i;
+   wire           ps2_wb_ack_o;
+
  BIU biu0(
  .clk(clk_50mhz),
  .rst(rst),
@@ -241,22 +245,28 @@ assign dpdot = {Ireq, Iack, mem_w, BIU_ready};
  .MIO_data4bus_i(MIO_data4bus), //write to CPU
  .MIO_ready_i(MIO_ready),
 
- //.wb_m1_cpu_gnt(wb_m1_cpu_gnt),
- .wb_adr_o(wb_m1_cpu_adr_i),
- .wb_dat_o(wb_m1_cpu_dat_i),
- .wb_sel_o(wb_m1_cpu_sel_i),
- .wb_cyc_o(wb_m1_cpu_cyc_i),
- .wb_stb_o(wb_m1_cpu_stb_i),
- .wb_we_o (wb_m1_cpu_we_i ),
- .wb_dat_i(wb_m1_cpu_dat_o),
- .wb_ack_i(wb_m1_cpu_ack_o)
+ .wb_d_adr_o(wb_m1_cpu_adr_i),
+ .wb_d_dat_o(wb_m1_cpu_dat_i),
+ .wb_d_sel_o(wb_m1_cpu_sel_i),
+ .wb_d_cyc_o(wb_m1_cpu_cyc_i),
+ .wb_d_stb_o(wb_m1_cpu_stb_i),
+ .wb_d_we_o (wb_m1_cpu_we_i ),
+ .wb_d_dat_i(wb_m1_cpu_dat_o),
+ .wb_d_ack_i(wb_m1_cpu_ack_o),
+
+ .wb_c_adr_o(ps2_wb_adr_i),
+ .wb_c_dat_o(ps2_wb_dat_i),
+ .wb_c_stb_o(ps2_wb_stb_i),
+ .wb_c_we_o (ps2_wb_we_i ),
+ .wb_c_dat_i(ps2_wb_dat_o),
+ .wb_c_ack_i(ps2_wb_ack_o)
     );
 
 output			hsync;			// From vchache0 of vcache.v
 output [7:0]		rgb;			// From vchache0 of vcache.v
 output			vsync;			// From vchache0 of vcache.v
 
-vcache 
+vcache
      #(
        .vram_adr_base('hf80000)
 	   )
@@ -264,7 +274,7 @@ vcache
 (
  .wb_clk_i(clk_50mhz),
  .wb_rst_i(rst),
- 
+
  //.wb_m0_vcache_gnt(wb_m0_vcache_gnt),
  .wb_adr_o(wb_m0_vcache_adr_i),
  .wb_dat_o(wb_m0_vcache_dat_i),
@@ -282,14 +292,14 @@ vcache
 		// Inputs
 		.vga_clk		(vga_clk)
 );
-	
+
 wire [1:0] 				  cellram_mst_sel;
 arbiter arbiter0(
    .wb_clk(clk_50mhz),
    .wb_rst(rst),
-   
+
    .cellram_mst_sel(cellram_mst_sel),
-	
+
    .wb_s0_cellram_wb_adr_o(cellram_wb_adr_i),
    .wb_s0_cellram_wb_dat_o(cellram_wb_dat_i),
    .wb_s0_cellram_wb_sel_o(cellram_wb_sel_i),
@@ -307,7 +317,7 @@ arbiter arbiter0(
 		 .wb_m0_vcache_cyc_i	(wb_m0_vcache_cyc_i),
 		 .wb_m0_vcache_stb_i	(wb_m0_vcache_stb_i),
 		 .wb_m0_vcache_we_i	(wb_m0_vcache_we_i),
-		 
+
 		 .wb_m1_cpu_dat_o	(wb_m1_cpu_dat_o[31:0]),
 		 .wb_m1_cpu_ack_o	(wb_m1_cpu_ack_o),
 		 .wb_m1_cpu_adr_i	(wb_m1_cpu_adr_i[31:0]),
@@ -316,7 +326,7 @@ arbiter arbiter0(
 		 .wb_m1_cpu_cyc_i	(wb_m1_cpu_cyc_i),
 		 .wb_m1_cpu_stb_i	(wb_m1_cpu_stb_i),
 		 .wb_m1_cpu_we_i	(wb_m1_cpu_we_i)
-		 
+
 		 //.wb_m1_cpu_gnt		(wb_m1_cpu_gnt),
 		 //.wb_m0_vcache_gnt	(wb_m0_vcache_gnt)
 );
@@ -381,6 +391,38 @@ arbiter arbiter0(
 
  );
 
+inout ps2_clk, ps2_dat;
+wire  ps2_clk, ps2_dat;
+wire  ps2_irq_o;
+reg ps2_clk_trig, ps2_dat_trig;
+
+always @(posedge clk_50mhz or posedge rst) begin
+  if(rst) begin
+    ps2_clk_trig <= 0;
+    ps2_dat_trig <= 0;
+  end else if(&clkdiv[17:0]) begin
+    ps2_clk_trig <= ~ps2_clk;
+    ps2_dat_trig <= ~ps2_dat;
+  end else begin
+    ps2_clk_trig <= ps2_clk_trig | ~ps2_clk;
+    ps2_dat_trig <= ps2_dat_trig | ~ps2_dat;
+  end
+end
+
+ps2_wb ps2_wb0 (
+    .wb_clk_i(clk_50mhz),
+    .wb_rst_i(rst),
+    .wb_dat_i(ps2_wb_dat_i),
+    .wb_dat_o(ps2_wb_dat_o),
+    .wb_adr_i(ps2_wb_adr_i),
+    .wb_stb_i(ps2_wb_stb_i),
+    .wb_we_i (ps2_wb_we_i),
+    .wb_ack_o(ps2_wb_ack_o),
+    .irq_o(ps2_irq_o),
+    .ps2_clk(ps2_clk),
+    .ps2_dat(ps2_dat)
+    );
+
  //------Peripheral Driver-----------------------------------
  /* GPIO out use on LEDs & Counter-Controler read and write addre=f0000000-ffffffff0
 */
@@ -434,8 +476,13 @@ arbiter arbiter0(
    end else if(Iack) begin
      Ireq <= 0;
    end else begin
-     Ireq_hold <= button_out[4];
-     if(!Ireq_hold && button_out[4]) Ireq <= 1;
+     Ireq_hold <= ps2_irq_o;
+     if(!Ireq_hold && ps2_irq_o) Ireq <= 1;
    end
  end
+
+//assign dpdot = {MIO_ready, BIU_req, mem_w, BIU_ready};
+//assign dpdot = {cellram_mst_sel, mem_w, BIU_ready};//vga_gnt, cpu_gnt
+assign dpdot = {Ireq, Iack | ps2_irq_o, mem_w | ps2_clk_trig, BIU_ready | ps2_dat_trig};
+
  endmodule

@@ -23,17 +23,25 @@ input wire rst,
  //
  // WISHBONE interface
  //
- input  wire      wb_ack_i, // normal termination
- input  wire      wb_err_i, // termination w/ error
- input  wire      wb_rty_i, // termination w/ retry
- input  wire [31:0]       wb_dat_i, // input data bus
- //input  wire      wb_m1_cpu_gnt, // grant access to bus
- output reg      wb_cyc_o, // cycle valid output
- output reg [31:0]      wb_adr_o, // address bus outputs
- output reg      wb_stb_o, // strobe output
- output reg      wb_we_o,  // indicates write transfer
- output reg [3:0]       wb_sel_o, // byte select outputs
- output reg [31:0]      wb_dat_o, // output data bus
+ input  wire      wb_d_ack_i, // normal termination
+ input  wire      wb_d_err_i, // termination w/ error
+ input  wire      wb_d_rty_i, // termination w/ retry
+ input  wire [31:0]       wb_d_dat_i, // input data bus
+ output reg      wb_d_cyc_o, // cycle valid output
+ output reg [31:0]      wb_d_adr_o, // address bus outputs
+ output reg      wb_d_stb_o, // strobe output
+ output reg      wb_d_we_o,  // indicates write transfer
+ output reg [3:0]       wb_d_sel_o, // byte select outputs
+ output reg [31:0]      wb_d_dat_o, // output data bus
+
+ input  wire      wb_c_ack_i, // normal termination
+ input  wire      wb_c_err_i, // termination w/ error
+ input  wire      wb_c_rty_i, // termination w/ retry
+ input  wire [7:0]       wb_c_dat_i, // input data bus
+ output reg [31:0]      wb_c_adr_o, // address bus outputs
+ output reg      wb_c_stb_o, // strobe output
+ output reg      wb_c_we_o,  // indicates write transfer
+ output reg [7:0]      wb_c_dat_o, // output data bus
 
 input wire Cpu_mem_w_i,
 input wire [31:0] Cpu_data2bus_i,                                   //data from CPU
@@ -50,31 +58,44 @@ input wire MIO_ready_i
     );
 
 always @(*) begin
-    MIO_data2bus_o <= Cpu_data2bus_i;
-    wb_dat_o       <= Cpu_data2bus_i;
+    MIO_data2bus_o   <= Cpu_data2bus_i;
+    wb_d_dat_o       <= Cpu_data2bus_i;
+    wb_c_dat_o       <= Cpu_data2bus_i;
 
-    MIO_addr_bus_o <= Cpu_addr_bus_i;
-    wb_adr_o       <= Cpu_addr_bus_i;
+    MIO_addr_bus_o   <= Cpu_addr_bus_i;
+    wb_d_adr_o       <= Cpu_addr_bus_i;
+    wb_c_adr_o       <= Cpu_addr_bus_i;
 end
 
 always @(*) begin
-    wb_sel_o <= 4'b1111;
+    wb_d_sel_o <= 4'b1111;
 end
 
 always @(*) begin
-    MIO_mem_w_o    <= 0;
-    wb_we_o        <= 0;
+    MIO_mem_w_o      <= 0;
+    wb_d_we_o        <= 0;
+    wb_c_we_o        <= 0;
+
     Cpu_data4bus_o <= 0;
     Cpu_ready_o    <= 0;
-    wb_cyc_o       <= 0;
-    wb_stb_o       <= 0;
+
+    wb_d_cyc_o       <= 0;
+    wb_d_stb_o       <= 0;
+    wb_c_stb_o       <= 0;
+
     case(Cpu_addr_bus_i[31:28])
         4'h3: begin
-            wb_we_o        <= Cpu_mem_w_i;
-            Cpu_data4bus_o <= wb_dat_i;
-            Cpu_ready_o    <= wb_ack_i;// & wb_m1_cpu_gnt;
-            wb_cyc_o       <= Cpu_req_i;
-            wb_stb_o       <= Cpu_req_i;
+            wb_d_we_o        <= Cpu_mem_w_i;
+            Cpu_data4bus_o   <= wb_d_dat_i;
+            Cpu_ready_o      <= wb_d_ack_i;
+            wb_d_cyc_o       <= Cpu_req_i;
+            wb_d_stb_o       <= Cpu_req_i;
+        end
+        4'hc: begin
+            wb_c_we_o        <= Cpu_mem_w_i;
+            Cpu_data4bus_o   <= wb_c_dat_i;
+            Cpu_ready_o      <= wb_c_ack_i;
+            wb_c_stb_o       <= Cpu_req_i;
         end
         default: begin
             MIO_mem_w_o    <= Cpu_mem_w_i;
