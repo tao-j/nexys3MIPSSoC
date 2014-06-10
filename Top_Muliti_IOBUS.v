@@ -65,7 +65,7 @@ cellram_ub_n_o,
    output                  cellram_lb_n_o;
 
  wire clk_50mhz;
- wire vga_clk;
+ wire vga_clk, txt_clk;
  wire Clk_CPU, rst,clk_m, mem_w,data_ram_we,GPIOf0000000_we,GPIOe0000000_we,counter_we;
  wire counter_OUT0,counter_OUT1,counter_OUT2;
  wire [1:0]Counter_set;
@@ -81,7 +81,7 @@ cellram_ub_n_o,
 
  wire BIU_ready, MIO_ready, BIU_req;
  wire CPU_MIO;
- wire sys_ret=button_out[3];
+ wire sys_rst=button_out[3];
  wire sys_locked;
  reg Ireq;
  reg Ireq_hold;
@@ -93,8 +93,9 @@ cellram_ub_n_o,
     // Clock out ports
     .CLK_OUT1(clk_50mhz),     // OUT
 	  .CLK_OUT2(vga_clk),     // OUT
+    .CLK_OUT3(txt_clk),
     // Status and control signals
-    .RESET(sys_ret),// IN
+    .RESET(1'b0),// IN
     .LOCKED(sys_locked));      // OUT
 
  assign MIO_ready=~button_out[1];
@@ -191,6 +192,13 @@ cellram_ub_n_o,
  wire [31:0] MIO_addr_bus;
  wire MIO_mem_w;
 
+ wire txt_ena;
+ wire txt_wea;
+ wire [12:0] txt_addra;
+ wire [15:0] txt_dina;
+ wire [15:0] txt_douta;
+ wire [31:0] gpu_status;
+
    wire [31:0]          cellram_wb_adr_i;
    wire [31:0]          cellram_wb_dat_i;
    wire [31:0]          cellram_wb_dat_o;
@@ -259,12 +267,28 @@ cellram_ub_n_o,
  .wb_c_stb_o(ps2_wb_stb_i),
  .wb_c_we_o (ps2_wb_we_i ),
  .wb_c_dat_i(ps2_wb_dat_o),
- .wb_c_ack_i(ps2_wb_ack_o)
+ .wb_c_ack_i(ps2_wb_ack_o),
+
+ .txt_ena(txt_ena),
+ .txt_wea(txt_wea),
+ .txt_addra(txt_addra),
+ .txt_dina(txt_douta),
+ .txt_douta(txt_dina),
+
+ .gpu_status(gpu_status)
     );
 
 output			hsync;			// From vchache0 of vcache.v
 output [7:0]		rgb;			// From vchache0 of vcache.v
 output			vsync;			// From vchache0 of vcache.v
+
+assign hsync = gpu_status[0] ? hsync_vc : hsync_tx;
+assign vsync = gpu_status[0] ? vsync_vc : vsync_tx;
+assign rgb   = gpu_status[0] ? rgb_vc   : rgb_tx;
+
+wire [7:0] rgb_vc;
+wire hsync_vc;
+wire vsync_vc;
 
 vcache
      #(
@@ -286,12 +310,32 @@ vcache
  .wb_ack_i(wb_m0_vcache_ack_o),
 		//vga
 		// Outputs
-		.rgb			(rgb[7:0]),
-		.hsync			(hsync),
-		.vsync			(vsync),
+		.rgb			(rgb_vc[7:0]),
+		.hsync			(hsync_vc),
+		.vsync			(vsync_vc),
 		// Inputs
 		.vga_clk		(vga_clk)
 );
+
+wire [7:0] rgb_tx;
+wire hsync_tx;
+wire vsync_tx;
+
+gpu gpu0 (
+    .clr(rst),
+    .clka(clk_50mhz),
+    .clkb(txt_clk),
+    .ena(txt_ena),
+    .wea(txt_wea),
+    .addra(txt_addra),
+    .dina(txt_dina),
+    .douta(txt_douta),
+    .vgaRed(rgb_tx[2:0]),
+    .vgaGreen(rgb_tx[5:3]),
+    .vgaBlue(rgb_tx[7:6]),
+    .Hsync(hsync_tx),
+    .Vsync(vsync_tx)
+    );
 
 wire [1:0] 				  cellram_mst_sel;
 arbiter arbiter0(
