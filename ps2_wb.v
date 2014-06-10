@@ -6,8 +6,9 @@
 -- File       : ps2_wishbone.v
 -- Author(s)  : Daniel Quinter <danielqg@infonegocio.com>
 --            : Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+--            : @Wenri <gbc@zju.edu.cn>
 -- Created    : 2003-05-08
--- Last update: 2011-05-19
+-- Last update: 2014-06-10
 -- Platform   : Verilog 2001
 -------------------------------------------------------------------------------
 -- Description: PS/2 mice/keyboard wishbone interface
@@ -98,8 +99,8 @@ module ps2_wb(                          // Wishbone interface
     assign status_reg[0]   = busy;
 
     // Control register
-    assign irq_rx_enb = 1;//control_reg[6];
-    assign irq_tx_enb = 1;//control_reg[7];
+    assign irq_rx_enb = control_reg[6];
+    assign irq_tx_enb = control_reg[7];
 
     // purpose: Control register latch
     always @(posedge wb_clk_i)

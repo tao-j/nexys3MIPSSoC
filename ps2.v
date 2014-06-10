@@ -6,8 +6,9 @@
 -- File       : ps2.v
 -- Author(s)  : Daniel Quintero <danielqg@infonegocio.com>
 --            : Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+--            : @Wenri <gbc@zju.edu.cn>
 -- Created    : 2003-04-14
--- Last update: 2011-05-24
+-- Last update: 2014-06-10
 -- Platform   : verilog 2001
 -------------------------------------------------------------------------------
 -- Description: PS/2 generic UART for mice/keyboard

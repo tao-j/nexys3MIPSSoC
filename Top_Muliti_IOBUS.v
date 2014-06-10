@@ -400,7 +400,7 @@ always @(posedge clk_50mhz or posedge rst) begin
   if(rst) begin
     ps2_clk_trig <= 0;
     ps2_dat_trig <= 0;
-  end else if(&clkdiv[17:0]) begin
+  end else if(&clkdiv[20:0]) begin
     ps2_clk_trig <= ~ps2_clk;
     ps2_dat_trig <= ~ps2_dat;
   end else begin
